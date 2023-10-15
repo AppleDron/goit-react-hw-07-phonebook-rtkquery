@@ -1,25 +1,26 @@
 import React from 'react';
 import { nanoid } from 'nanoid';
 import { Forma, Label } from './Form.styled';
-import { useDispatch, useSelector } from 'react-redux';
-import { createContact } from 'redux/contacts/operations';
+import { useSelector } from 'react-redux';
+import { useCreateContactMutation } from 'redux/contacts/operationsRTKQuery';
+import { selectContacts } from 'redux/selectors';
 
 const Form = () => {
-  const contacts = useSelector(state => state.contacts.items);
-  const dispatch = useDispatch();
+  const contacts = useSelector(selectContacts);
+  const [createContact, info] = useCreateContactMutation();
   const nameId = nanoid();
   const numberId = nanoid();
 
-  const addNewContact = data => {
+  const addNewContact = ({ name, number }) => {
     const result = contacts.some(
-      contact => contact.name.toLowerCase() === data.name.toLowerCase()
+      contact => contact.name.toLowerCase() === name.toLowerCase()
     );
 
     if (result) {
-      return alert(`${data.name} in already in contacts`);
+      return alert(`${name} in already in contacts`);
     }
 
-    dispatch(createContact(data));
+    createContact({ name, number });
   };
 
   const handleSubmit = e => {
@@ -62,6 +63,7 @@ const Form = () => {
 
         <button type="submit">Add contact</button>
       </Forma>
+      {info.isLoading && <h1>Creating...</h1>}
     </div>
   );
 };

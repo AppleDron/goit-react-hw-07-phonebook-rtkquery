@@ -7,29 +7,33 @@ import {
   DeleteButton,
   TitleContacts,
 } from './Contacts.styled';
-import { deleteContact, getContactsThunk } from 'redux/contacts/operations';
+import { selectFilteredContacts } from 'redux/selectors';
 import {
-  selectError,
-  selectFilteredContacts,
-  selectIsLoading,
-} from 'redux/selectors';
+  useDeleteContactMutation,
+  useGetContactsQuery,
+} from 'redux/contacts/operationsRTKQuery';
+import { setContacts } from 'redux/contacts/contactsSlice';
 
 const Contacts = ({ children }) => {
   const dispatch = useDispatch();
-  const isLoading = useSelector(selectIsLoading);
-  const error = useSelector(selectError);
   const filteredContacts = useSelector(selectFilteredContacts);
 
+  const { isLoading, data, isError } = useGetContactsQuery();
+  const [deleteContact, delInfo] = useDeleteContactMutation();
+
   useEffect(() => {
-    dispatch(getContactsThunk());
-  }, [dispatch]);
+    if (data) {
+      dispatch(setContacts(data));
+    }
+  }, [data, dispatch]);
 
   return (
     <div>
       <TitleContacts>Contacts</TitleContacts>
       {children}
-      {isLoading && !error && <b>In progress...</b>}
-      {error && <b>Error!</b>}
+      {delInfo.isLoading && <h1>Deleting...</h1>}
+      {isLoading && !isError && <b>In progress...</b>}
+      {isError && <b>Error!</b>}
       <ContactList>
         {filteredContacts.map(contact => (
           <Contactitem key={contact.id}>
@@ -38,7 +42,7 @@ const Contacts = ({ children }) => {
             </p>
             <DeleteButton
               type="button"
-              onClick={() => dispatch(deleteContact(contact.id))}
+              onClick={() => deleteContact(contact.id)}
             >
               <AiFillDelete />
             </DeleteButton>
